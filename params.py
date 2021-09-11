@@ -3,6 +3,7 @@ import numpy as np
 from  typing import Union
 from sklearn.base import RegressorMixin
 from sklearn.base import ClassifierMixin
+from sklearn.utils.fixes import loguniform
 
 class Params():
 
@@ -12,8 +13,10 @@ class Params():
         """
 
     # placeholders
-    numParams = {'C' : np.linspace(0, 2, num=5),
-                'gamma' : np.linspace(0, 1, num=5), }
+    numParams = {'C' : loguniform(1e0, 1e3),
+                'gamma' : loguniform(1e-4, 1e-3),
+                'degree': np.linspace(1, 5, num=2),
+                'base_estimator__max_depth': [2, 4, 6, 8]}
 
     def __init__(
         self,
