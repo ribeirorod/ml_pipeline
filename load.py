@@ -3,16 +3,16 @@ from utils import utils
 import os
 import numpy as np
 import pandas as pd
-
+from functools import cached_property
 from typing import Dict, List, Any, Optional, Sequence, Union
 
-from sklearn.metrics import  mean_squared_error, explained_variance_score, f1_score, classification_report
-from sklearn.model_selection import train_test_split, GridSearchCV
+from sklearn.metrics import  mean_squared_error, classification_report, confusion_matrix
+from sklearn.model_selection import train_test_split, GridSearchCV, KFold, GroupKFold, StratifiedKFold
 
 #standarized features to avoid impact on the neighbors distance calculation
 from sklearn.preprocessing import StandardScaler
 
-class loadModels(utils):
+class ModelLoad(utils):
 
     def __init__(
         self,
@@ -35,7 +35,7 @@ class loadModels(utils):
         else:
             return __class__.default_parameters
     
-    def loadModels(self) -> Dict:
+    def load(self) -> Dict:
         params = self.updateParams()
         models = {}
         for classifier in self.classifiers:
@@ -43,7 +43,7 @@ class loadModels(utils):
         return models
                 
 
-class RunModels(utils):
+class ModelRun(utils):
 
     def __init__(
         self,
@@ -58,25 +58,24 @@ class RunModels(utils):
         self.test_size = test_size
         self.grid_search = grid_search
 
-    def data(self)-> List[Union[Sequence , Any , list]]:
-        # TODO validate file format 
-        fileName,fileExtension = os.path.splitext(self.filepath)
-        
+    @cached_property
+    def data(self)-> pd.DataFrame:
+        #fileName,fileExtension = os.path.splitext(self.filepath)
         df = pd.read_csv(self.filepath)
-        #convention to always put target column at last
         X = df[df.columns[:-1]]
         y = df[df.columns[-1]]
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=self.test_size, random_state=101)
-        return X_train, X_test, y_train, y_test
+        return X , y
 
-    def scaled_data(self):
-        df = pd.read_csv(self.filepath)
+    def dataSplit(self)-> List[Union[Sequence , Any , list]]:
+        X , y = self.data()
+        return train_test_split(X, y, test_size=self.test_size, random_state=101)
+
+    def scaled(self):
+        features , y = self.data()
         scaler = StandardScaler()
-        scaler.fit(df.drop(df.columns[:-1], axis=1))
-        X = scaler.transform(df.drop(df.columns[:-1], axis=1))
-        y = df[df.columns[-1]]
-        X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=self.test_size, random_state=101)
-        return X_train, X_test, y_train, y_test
+        scaler.fit(features)
+        X = scaler.transform(features)
+        return train_test_split(X, y, test_size=self.test_size, random_state=101)
 
     # TODO implement Grid search
     # Choose best K value
@@ -84,11 +83,11 @@ class RunModels(utils):
     def execute(self):
         fit = {}
         predictions = {}
-        X_train, X_test, y_train, y_test = self.data()
+        X_train, X_test, y_train, y_test = self.dataSplit()
 
         for model in self.models:
             if model == "K Nearest Neighbors":
-                 X_train, X_test, y_train, y_test = self.scaled_data()
+                 X_train, X_test, y_train, y_test = self.scaled()
 
             fit[model] = self.models[model].fit(X_train, y_train)
             predictions[model] = fit[model].predict(X_test)
@@ -102,7 +101,7 @@ class RunModels(utils):
             results[model]={}
             results[model]['MSE'] = np.sqrt(mean_squared_error(y_test, predictions[model]))
             results[model]['CR'] = classification_report(y_test, predictions[model])
-            results[model]['CM'] = classification_report(y_test, predictions[model])
+            results[model]['CM'] = confusion_matrix(y_test, predictions[model])
 
         return results
 
@@ -112,3 +111,13 @@ class RunModels(utils):
 # grid = GridSearchCV(SVC(),param_grid,refit=True,verbose=2)
 # grid.fit(X_train,y_train)
 # grid_predictions = grid.predict(X_test)
+# best_classifier = grid.best_estimator_
+
+# def scores (model, X_train, X_test, y_train, y_test):
+#     model.fit(X_train,y_test)
+
+
+
+##from sklearn.model_selection import cross_val_score
+
+#cross_val_score()
