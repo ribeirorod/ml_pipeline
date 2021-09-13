@@ -1,13 +1,14 @@
 import pandas as pd
-from utils import utils
-from params import Params
+
+from .utils import utils
+from .params import Params
 from functools import cached_property
 from typing import Dict, List, Any, Optional, Sequence, Union
 from sklearn.metrics import  classification_report, confusion_matrix
 from sklearn.model_selection import train_test_split, GridSearchCV, StratifiedKFold
 from sklearn.preprocessing import StandardScaler
 
-class ModelRun(utils):
+class Model(utils):
 
     def __init__(
         self,
@@ -28,14 +29,16 @@ class ModelRun(utils):
         df = pd.read_csv(self.filepath)
         X = df[df.columns[:-1]]
         y = df[df.columns[-1]]
-        return X , y
+        return (X , y)
+    
+    # variaveis numericas quantitativas x qualitativas (scalar standarization nao se aplica)
 
     def dataSplit(self)-> List[Union[Sequence , Any , list]]:
-        X , y = self.data()
+        X , y = self.data
         return train_test_split(X, y, test_size=self.test_size)
 
     def scaled(self):
-        features , y = self.data()
+        features , y = self.data
         scaler = StandardScaler()
         scaler.fit(features)
         X = scaler.transform(features)
@@ -43,18 +46,21 @@ class ModelRun(utils):
 
     def load(self) -> Dict:
         self.models={}
+        params_grid = {}
         for classifier in self.classifiers:
             if self.grid_search:
-                params_grid = Params(self.classifiers[classifier]).param_grid()
+                params_grid = Params(classifier, self.classifiers[classifier]).param_grid()
                 self.models[classifier] = GridSearchCV(self.classifiers[classifier](),params_grid,refit=True)
+                print(classifier, params_grid)
             else:
                 self.models[classifier] = self.classifiers[classifier]()
 
-    def execute(self):
+    def execute(self) -> tuple:
         self.load()
         fit = {}
         predictions = {}
         
+
         for model in self.models:
             # Choose best K value
             if model == "K Nearest Neighbors":
@@ -68,9 +74,9 @@ class ModelRun(utils):
                 fit[model] = self.models[model].fit(X_train, y_train)
 
             predictions[model] = fit[model].predict(X_test)
-        return predictions, y_test
+        return (predictions, y_test)
 
-    def results(self) -> Dict[Dict]:
+    def results(self) -> Dict:
         results = {}
         predictions, y_test = self.execute()
 
@@ -82,5 +88,5 @@ class ModelRun(utils):
         return results
 
 
-##from sklearn.model_selection import cross_val_score
+#from sklearn.model_selection import cross_val_score
 #cross_val_score()

@@ -23,7 +23,7 @@ class utils():
     }
 
     classifiers = {
-    "Logistic Regression": LogisticRegression,
+    #"Logistic Regression": LogisticRegression,
     "Decision Tree": DecisionTreeClassifier,
     "Random Forest": RandomForestClassifier,
     "Gradient Boosting": GradientBoostingClassifier,
