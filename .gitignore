@@ -1,13 +1,5 @@
 *.pyc
-.idea
-.env
-.env.*
-!.env.example
-venv
-/.venv
+/ml_venv
 Pipfile
-Pipfile.lock
 .pytest_cache
-notebooks
-output/
 .ipynb_checkpoints/
