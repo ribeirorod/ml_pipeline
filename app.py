@@ -1,3 +1,4 @@
+#!/usr/bin/env
 
 from Supervised.load import Model
 import seaborn as sns
@@ -13,8 +14,12 @@ classifiers = None
 Client = Model(
         filepath = path, 
         test_size = 0.3, 
-        grid_search=True)
+        grid_search=False)
 
-Client.load()
+CR, CM = Client.results()
 
 
+# #Client.plot()
+# import pandas as pd
+
+# R = pd.DataFrame()

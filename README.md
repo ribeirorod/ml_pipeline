@@ -6,7 +6,14 @@ It does not cover data preparation nor feature engineering
 
 ## Usage
 
-Data has been previously adjusted so the target is the last column
+python3 -m venv YOURVENV
+source YOURVENV/bin/activate
+pip install -r requirements.txt
+
+
+Assumptions:
+- Data has been previously adjusted so the target is the last column
+
 
 * Classifier ( 
     FilePath:str,
@@ -28,6 +35,10 @@ Tabular model comparison (which metrics)
 Quick visualizations
 
 # TODOS 
+
+* default param_grid file (based on library version)
+* define metrics easy output
+* results visualization
 * validate file format before read pandas
 * check for text descritive feature, convert using pd get dummies method
 
